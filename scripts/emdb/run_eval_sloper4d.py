@@ -10,6 +10,7 @@ import pickle as pkl
 from glob import glob
 from tqdm import tqdm
 from collections import defaultdict
+import matplotlib.pyplot as plt
 
 from lib.utils.eval_utils import *
 from lib.utils.rotation_conversions import *
@@ -18,16 +19,25 @@ from lib.camera.slam_utils import eval_slam
 from sloper4d_loader import SLOPER4D_Dataset
 
 parser = argparse.ArgumentParser()
+
 # parser.add_argument('--input_dir', type=str, default='results/sloper4d_seq007')
 # parser.add_argument('--pred_cam_path', type=str, default='/home/junyi42/human_in_world/sloper4d_eval_script/tram/results/seq007_garden_001_imgs/camera.npy')
 # parser.add_argument('--pred_smpl_path', type=str, default='/home/junyi42/human_in_world/sloper4d_eval_script/tram/results/seq007_garden_001_imgs/hps/hps_track_0.npy')
 # parser.add_argument('--gt_pkl_path', type=str, default='/home/junyi42/human_in_world/demo_data/sloper4d/seq007_garden_001/seq007_garden_001_labels.pkl')
+
 parser.add_argument('--input_dir', type=str, default='results/sloper4d_seq008')
 parser.add_argument('--pred_cam_path', type=str, default='/home/junyi42/human_in_world/sloper4d_eval_script/tram/results/seq008_running_001_imgs/camera.npy')
 parser.add_argument('--pred_smpl_path', type=str, default='/home/junyi42/human_in_world/sloper4d_eval_script/tram/results/seq008_running_001_imgs/hps/hps_track_0.npy')
 parser.add_argument('--gt_pkl_path', type=str, default='/home/junyi42/human_in_world/demo_data/sloper4d/seq008_running_001/seq008_running_001_labels.pkl')
+
+parser.add_argument('--visualize', action='store_true', help='Visualize trajectories')
+parser.add_argument('--grid_size', type=int, default=5, help='Grid size for trajectory visualization')
 args = parser.parse_args()
 input_dir = args.input_dir
+
+# Create visualization directory
+vis_dir = os.path.join(input_dir, 'visualizations')
+os.makedirs(vis_dir, exist_ok=True)
 
 # Load Sloper4D dataset
 sloper4d_data = SLOPER4D_Dataset(
@@ -47,6 +57,7 @@ smpls = {g:SMPL(gender=g) for g in ['neutral', 'male', 'female']}
 accumulator = defaultdict(list)
 m2mm = 1e3
 human_traj = {}
+cam_traj = {}
 total_invalid = 0
 
 # Process Sloper4D dataset
@@ -263,6 +274,10 @@ re = {'traj_gt': traj_ref.positions_xyz,
 
 results[seq_name] = re
 
+# Store camera trajectories for visualization
+cam_traj[seq_name] = {'gt': torch.from_numpy(traj_ref.positions_xyz), 
+                      'pred': torch.from_numpy(traj_est.positions_xyz)}
+
 ate = np.mean([re['stats_slam']['mean'] for re in results.values()])
 ate_s = np.mean([re['stats_metric']['mean'] for re in results.values()])
 accumulator['ate'] = ate
@@ -274,3 +289,57 @@ for k, v in accumulator.items():
 
 df = pd.DataFrame(list(accumulator.items()), columns=['Metric', 'Value'])
 df.to_excel(f"{args.input_dir}/evaluation.xlsx", index=False)
+
+# Visualize trajectories if requested
+if args.visualize:
+    print("Visualizing trajectories...")
+    
+    # Visualize human trajectories (RTE)
+    human_vis_dir = os.path.join(vis_dir, 'human_trajectories')
+    os.makedirs(human_vis_dir, exist_ok=True)
+    vis_traj(human_traj, human_traj, human_vis_dir, grid=args.grid_size)
+    print(f"Human trajectory visualizations saved to {human_vis_dir}")
+    
+    # Visualize camera trajectories (ATE)
+    cam_vis_dir = os.path.join(vis_dir, 'camera_trajectories')
+    os.makedirs(cam_vis_dir, exist_ok=True)
+    
+    # Create a modified version of cam_traj for visualization
+    cam_traj_vis = {}
+    for seq in cam_traj:
+        cam_traj_vis[seq] = {
+            'gt': cam_traj[seq]['gt'],
+            'pred': cam_traj[seq]['pred']
+        }
+    
+    vis_traj(cam_traj, cam_traj, cam_vis_dir, grid=args.grid_size)
+    print(f"Camera trajectory visualizations saved to {cam_vis_dir}")
+    
+    # Create a combined visualization showing both human and camera trajectories
+    combined_vis_dir = os.path.join(vis_dir, 'combined_trajectories')
+    os.makedirs(combined_vis_dir, exist_ok=True)
+    
+    # For each sequence, create a matplotlib figure with both trajectories
+    for seq in human_traj:
+        plt.figure(figsize=(10, 8))
+        
+        # Plot human trajectories
+        human_gt = human_traj[seq]['gt'].numpy()
+        human_pred = human_traj[seq]['pred'].numpy()
+        plt.scatter(human_gt[:, 0], human_gt[:, 2], s=10, c='green', alpha=0.7, label='Human GT')
+        plt.scatter(human_pred[:, 0], human_pred[:, 2], s=10, c='orange', alpha=0.7, label='Human Pred')
+        
+        # Plot camera trajectories
+        cam_gt = cam_traj[seq]['gt'].numpy()
+        cam_pred = cam_traj[seq]['pred'].numpy()
+        plt.scatter(cam_gt[:, 0], cam_gt[:, 2], s=10, c='blue', alpha=0.7, label='Camera GT')
+        plt.scatter(cam_pred[:, 0], cam_pred[:, 2], s=10, c='red', alpha=0.7, label='Camera Pred')
+        
+        plt.grid(True, linestyle='--', alpha=0.7)
+        plt.title(f'Combined Trajectories - {seq}')
+        plt.legend()
+        plt.axis('equal')
+        plt.savefig(os.path.join(combined_vis_dir, f'{seq}_combined.png'), dpi=200, bbox_inches='tight')
+        plt.close()
+    
+    print(f"Combined trajectory visualizations saved to {combined_vis_dir}")

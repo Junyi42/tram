@@ -178,11 +178,13 @@ def vis_traj(traj_1, traj_2, savefolder, grid=5):
         traj_gt = traj_gt - vis_center
         
         length = len(traj_gt)
+        print(f"Length of traj_gt: {length} for folder {seq}")
         step = int(length/100)
 
         a1 = np.linspace(0.3, 0.90, len(traj_gt[0::step,0]))
         a2 = np.linspace(0.3, 0.90, len(traj_w[0::step,0]))
 
+        # plot x-z plane
         plt.rcParams['figure.figsize']=4,3
         fig, ax = plt.subplots()
         colors = ['tab:green', 'tab:blue', 'tab:orange']
@@ -195,7 +197,34 @@ def vis_traj(traj_1, traj_2, savefolder, grid=5):
 
         ax.tick_params(axis='both', labelsize=8)
         ax.xaxis.set_major_locator(ticker.MultipleLocator(grid)) 
-        fig.savefig(f'{savefolder}/{seq}.png', dpi=200, bbox_inches='tight')
+        fig.savefig(f'{savefolder}/{seq}_xz.png', dpi=200, bbox_inches='tight')
         plt.close(fig)
 
+        # plot y-z plane
+        plt.rcParams['figure.figsize']=4,3
+        fig, ax = plt.subplots()
+        ax.scatter(traj_gt[0::step,1], traj_gt[0::step,2], s=10, c='tab:grey', alpha=a1, edgecolors='none')
+        ax.scatter(traj_w[0::step,1], traj_w[0::step,2], s=10, c='tab:blue', alpha=a2, edgecolors='none')
+        ax.scatter(traj_1[0::step,1], traj_1[0::step,2], s=10, c='tab:orange', alpha=a1, edgecolors='none')
+        ax.set_box_aspect(1)
+        ax.set_aspect(1, adjustable='datalim')
+        ax.grid(linewidth=0.4, linestyle='--')  
 
+        ax.tick_params(axis='both', labelsize=8)
+        ax.xaxis.set_major_locator(ticker.MultipleLocator(grid)) 
+        fig.savefig(f'{savefolder}/{seq}_yz.png', dpi=200, bbox_inches='tight')
+        plt.close(fig)
+
+        # plot x-y plane
+        fig, ax = plt.subplots()
+        ax.scatter(traj_gt[0::step,0], traj_gt[0::step,1], s=10, c='tab:grey', alpha=a1, edgecolors='none')
+        ax.scatter(traj_w[0::step,0], traj_w[0::step,1], s=10, c='tab:blue', alpha=a2, edgecolors='none')
+        ax.scatter(traj_1[0::step,0], traj_1[0::step,1], s=10, c='tab:orange', alpha=a1, edgecolors='none')
+        ax.set_box_aspect(1)
+        ax.set_aspect(1, adjustable='datalim')
+        ax.grid(linewidth=0.4, linestyle='--')
+
+        ax.tick_params(axis='both', labelsize=8)
+        ax.xaxis.set_major_locator(ticker.MultipleLocator(grid)) 
+        fig.savefig(f'{savefolder}/{seq}_xy.png', dpi=200, bbox_inches='tight')
+        plt.close(fig)
