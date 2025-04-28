@@ -49,7 +49,7 @@ python scripts/estimate_camera.py --video "./example_video.mov"
 python scripts/estimate_camera.py --video "./another_video.mov" --static_camera
 
 # 2. Run 4D human capture with VIMO.
-python scripts/estimate_humans.py --video "./example_video.mov"
+python scripts/estimate_camera.py --video "./example_video.mov" 
 
 # 3. Put everything together. Render the output video.
 python scripts/visualize_tram.py --video "./example_video.mov"

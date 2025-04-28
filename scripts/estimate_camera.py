@@ -14,27 +14,39 @@ from lib.camera import run_metric_slam, calibrate_intrinsics, align_cam_to_world
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--video", type=str, default='./example_video.mov', help='input video')
+parser.add_argument("--img_folder", type=str, default=None, help='input image folder (alternative to video)')
 parser.add_argument("--static_camera", action='store_true', help='whether the camera is static')
 parser.add_argument("--visualize_mask", action='store_true', help='save deva vos for visualization')
 args = parser.parse_args()
 
 # File and folders
-file = args.video
-root = os.path.dirname(file)
-seq = os.path.basename(file).split('.')[0]
+if args.img_folder is not None:
+    # Use image folder as input
+    img_folder = args.img_folder
+    seq = os.path.basename(os.path.dirname(img_folder))
+else:
+    # Use video as input
+    file = args.video
+    root = os.path.dirname(file)
+    seq = os.path.basename(file).split('.')[0]
+    
+    seq_folder = f'results/{seq}'
+    img_folder = f'{seq_folder}/images'
+    os.makedirs(seq_folder, exist_ok=True)
+    os.makedirs(img_folder, exist_ok=True)
+    
+    ##### Extract Frames #####
+    print('Extracting frames ...')
+    nframes = video2frames(file, img_folder)
 
 seq_folder = f'results/{seq}'
-img_folder = f'{seq_folder}/images'
 os.makedirs(seq_folder, exist_ok=True)
-os.makedirs(img_folder, exist_ok=True)
-
-##### Extract Frames #####
-print('Extracting frames ...')
-nframes = video2frames(file, img_folder)
 
 ##### Detection + SAM + DEVA-Track-Anything #####
-print('Detect, Segment, and Track ...')
+print(f'Detect, Segment, and Track ..., save to {seq_folder}')
 imgfiles = sorted(glob(f'{img_folder}/*.jpg'))
+if len(imgfiles) == 0:
+    imgfiles = sorted(glob(f'{img_folder}/*.png'))
 boxes_, masks_, tracks_ = detect_segment_track(imgfiles, seq_folder, thresh=0.25, 
                                                min_size=100, save_vos=args.visualize_mask)
 

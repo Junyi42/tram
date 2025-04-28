@@ -13,21 +13,30 @@ from lib.pipeline import visualize_tram
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--video', type=str, default='./example_video.mov', help='input video')
+parser.add_argument('--img_folder', type=str, default=None, help='input image folder (alternative to video)')
 parser.add_argument('--max_humans', type=int, default=20, help='maximum number of humans to reconstruct')
 args = parser.parse_args()
 
 # File and folders
-file = args.video
-root = os.path.dirname(file)
-seq = os.path.basename(file).split('.')[0]
+if args.img_folder is not None:
+    # Use image folder as input
+    img_folder = args.img_folder
+    seq = os.path.basename(os.path.dirname(img_folder))
+else:
+    # Use video as input
+    file = args.video
+    root = os.path.dirname(file)
+    seq = os.path.basename(file).split('.')[0]
+    img_folder = f'results/{seq}/images'
 
 seq_folder = f'results/{seq}'
-img_folder = f'{seq_folder}/images'
 hps_folder = f'{seq_folder}/hps'
 os.makedirs(hps_folder, exist_ok=True)
 
 ##### Preprocess results from estimate_camera.py #####
 imgfiles = sorted(glob(f'{img_folder}/*.jpg'))
+if len(imgfiles) == 0:
+    imgfiles = sorted(glob(f'{img_folder}/*.png'))
 camera = np.load(f'{seq_folder}/camera.npy', allow_pickle=True).item()
 tracks = np.load(f'{seq_folder}/tracks.npy', allow_pickle=True).item()
 

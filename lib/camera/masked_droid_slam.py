@@ -16,8 +16,8 @@ from .slam_utils import get_dimention, est_calib, image_stream, preprocess_masks
 from .est_scale import est_scale_hybrid
 from ..utils.rotation_conversions import quaternion_to_matrix
 
-torch.multiprocessing.set_start_method('spawn')
-
+if not torch.multiprocessing.get_start_method(allow_none=True):
+    torch.multiprocessing.set_start_method('spawn')
 
 def run_metric_slam(img_folder, masks=None, calib=None, is_static=False):
     '''
