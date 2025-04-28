@@ -18,10 +18,14 @@ from lib.camera.slam_utils import eval_slam
 from sloper4d_loader import SLOPER4D_Dataset
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--input_dir', type=str, default='results/sloper4d_seq007')
-parser.add_argument('--pred_cam_path', type=str, default='/home/junyi42/human_in_world/sloper4d_eval_script/tram/results/seq007_garden_001_imgs/camera.npy')
-parser.add_argument('--pred_smpl_path', type=str, default='/home/junyi42/human_in_world/sloper4d_eval_script/tram/results/seq007_garden_001_imgs/hps/hps_track_0.npy')
-parser.add_argument('--gt_pkl_path', type=str, default='/home/junyi42/human_in_world/demo_data/sloper4d/seq007_garden_001/seq007_garden_001_labels.pkl')
+# parser.add_argument('--input_dir', type=str, default='results/sloper4d_seq007')
+# parser.add_argument('--pred_cam_path', type=str, default='/home/junyi42/human_in_world/sloper4d_eval_script/tram/results/seq007_garden_001_imgs/camera.npy')
+# parser.add_argument('--pred_smpl_path', type=str, default='/home/junyi42/human_in_world/sloper4d_eval_script/tram/results/seq007_garden_001_imgs/hps/hps_track_0.npy')
+# parser.add_argument('--gt_pkl_path', type=str, default='/home/junyi42/human_in_world/demo_data/sloper4d/seq007_garden_001/seq007_garden_001_labels.pkl')
+parser.add_argument('--input_dir', type=str, default='results/sloper4d_seq008')
+parser.add_argument('--pred_cam_path', type=str, default='/home/junyi42/human_in_world/sloper4d_eval_script/tram/results/seq008_running_001_imgs/camera.npy')
+parser.add_argument('--pred_smpl_path', type=str, default='/home/junyi42/human_in_world/sloper4d_eval_script/tram/results/seq008_running_001_imgs/hps/hps_track_0.npy')
+parser.add_argument('--gt_pkl_path', type=str, default='/home/junyi42/human_in_world/demo_data/sloper4d/seq008_running_001/seq008_running_001_labels.pkl')
 args = parser.parse_args()
 input_dir = args.input_dir
 
