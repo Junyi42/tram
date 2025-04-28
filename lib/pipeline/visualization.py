@@ -11,10 +11,11 @@ from lib.models.smpl import SMPL
 from lib.vis.renderer import Renderer
 
 
-def visualize_tram(seq_folder, floor_scale=2, bin_size=-1, max_faces_per_bin=30000):
-    img_folder = f'{seq_folder}/images'
+def visualize_tram(seq_folder, img_folder=None, floor_scale=2, bin_size=-1, max_faces_per_bin=30000):
+    if img_folder is None:
+        img_folder = f'{seq_folder}/images'
     hps_folder = f'{seq_folder}/hps'
-    imgfiles = sorted(glob(f'{img_folder}/*.jpg'))
+    imgfiles = sorted(glob(f'{img_folder}/*.jpg')) + sorted(glob(f'{img_folder}/*.png'))
     hps_files = sorted(glob(f'{hps_folder}/*.npy'))
 
     device = 'cuda'

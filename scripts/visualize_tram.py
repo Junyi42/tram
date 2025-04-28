@@ -31,4 +31,4 @@ seq_folder = f'results/{seq}'
 ##### Combine camera & human motion #####
 # Render video
 print('Visualize results ...')
-visualize_tram(seq_folder, floor_scale=args.floor_scale, bin_size=args.bin_size)
+visualize_tram(seq_folder, img_folder=img_folder, floor_scale=args.floor_scale, bin_size=args.bin_size)

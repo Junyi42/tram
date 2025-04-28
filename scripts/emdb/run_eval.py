@@ -85,9 +85,9 @@ for root in tqdm(emdb):
     pred_cam = dict(np.load(f'{input_dir}/camera/{seq}.npz'))
     pred_smpl = dict(np.load(f'{input_dir}/smpl/{seq}.npz'))
 
-    pred_rotmat = torch.tensor(pred_smpl['pred_rotmat'])
-    pred_shape = torch.tensor(pred_smpl['pred_shape'])
-    pred_trans = torch.tensor(pred_smpl['pred_trans'])
+    pred_rotmat = torch.tensor(pred_smpl['pred_rotmat'])    # T, 24, 3, 3
+    pred_shape = torch.tensor(pred_smpl['pred_shape'])      # T, 10
+    pred_trans = torch.tensor(pred_smpl['pred_trans'])      # T, 1, 3
 
     mean_shape = pred_shape.mean(dim=0, keepdim=True)
     pred_shape = mean_shape.repeat(len(pred_shape), 1)
