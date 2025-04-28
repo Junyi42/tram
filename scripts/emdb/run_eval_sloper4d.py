@@ -326,20 +326,20 @@ if args.visualize:
         # Plot human trajectories
         human_gt = human_traj[seq]['gt'].numpy()
         human_pred = human_traj[seq]['pred'].numpy()
-        plt.scatter(human_gt[:, 0], human_gt[:, 2], s=10, c='green', alpha=0.7, label='Human GT')
-        plt.scatter(human_pred[:, 0], human_pred[:, 2], s=10, c='orange', alpha=0.7, label='Human Pred')
+        plt.scatter(human_gt[:, 0], human_gt[:, 1], s=10, c='green', alpha=0.7, label='Human GT')
+        plt.scatter(human_pred[:, 0], human_pred[:, 1], s=10, c='orange', alpha=0.7, label='Human Pred')
         
         # Plot camera trajectories
         cam_gt = cam_traj[seq]['gt'].numpy()
         cam_pred = cam_traj[seq]['pred'].numpy()
-        plt.scatter(cam_gt[:, 0], cam_gt[:, 2], s=10, c='blue', alpha=0.7, label='Camera GT')
-        plt.scatter(cam_pred[:, 0], cam_pred[:, 2], s=10, c='red', alpha=0.7, label='Camera Pred')
+        plt.scatter(cam_gt[:, 0], cam_gt[:, 1], s=10, c='blue', alpha=0.7, label='Camera GT')
+        plt.scatter(cam_pred[:, 0], cam_pred[:, 1], s=10, c='red', alpha=0.7, label='Camera Pred')
         
         plt.grid(True, linestyle='--', alpha=0.7)
         plt.title(f'Combined Trajectories - {seq}')
         plt.legend()
         plt.axis('equal')
-        plt.savefig(os.path.join(combined_vis_dir, f'{seq}_combined.png'), dpi=200, bbox_inches='tight')
+        plt.savefig(os.path.join(combined_vis_dir, f'{seq}_combined_xy.png'), dpi=200, bbox_inches='tight')
         plt.close()
     
     print(f"Combined trajectory visualizations saved to {combined_vis_dir}")
