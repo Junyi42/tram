@@ -18,24 +18,13 @@ from lib.camera.slam_utils import eval_slam
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--split', type=int, default=2)
-parser.add_argument('--input_dir', type=str, default='results/emdb')
+parser.add_argument('--input_dir', type=str, default='results/sloper4d_seq007')
+parser.add_argument('--pred_cam_path', type=str, default='/home/junyi42/human_in_world/sloper4d_eval_script/tram/results/seq007_garden_001_imgs/camera.npy')
+parser.add_argument('--pred_smpl_path', type=str, default='/home/junyi42/human_in_world/sloper4d_eval_script/tram/results/seq007_garden_001_imgs/hps/hps_track_0.npy')
 args = parser.parse_args()
 input_dir = args.input_dir
 
-# EMDB dataset and splits
-roots = []
-for p in range(10):
-    folder = f'/mnt/kostas-graid/datasets/yufu/emdb/P{p}'
-    root = sorted(glob(f'{folder}/*'))
-    roots.extend(root)
-
-emdb = []
-spl = args.split
-for root in roots:
-    annfile = f'{root}/{root.split("/")[-2]}_{root.split("/")[-1]}_data.pkl'
-    ann = pkl.load(open(annfile, 'rb'))
-    if ann[f'emdb{spl}']:
-        emdb.append(root)
+emdb = ["/home/junyi42/human_in_world/demo_data/sloper4d/seq007_garden_001/seq007_garden_001_labels.pkl"]
 
 # SMPL
 smpl = SMPL()
@@ -50,7 +39,7 @@ total_invalid = 0
 
 for root in tqdm(emdb):
     # GT
-    annfile = f'{root}/{root.split("/")[-2]}_{root.split("/")[-1]}_data.pkl'
+    annfile = root
     ann = pkl.load(open(annfile, 'rb'))
 
     ext = ann['camera']['extrinsics']  # in the forms of R_cw, t_cw
@@ -82,8 +71,8 @@ for root in tqdm(emdb):
     
     # PRED
     seq = root.split('/')[-1]
-    pred_cam = dict(np.load(f'{input_dir}/camera/{seq}.npz'))
-    pred_smpl = dict(np.load(f'{input_dir}/smpl/{seq}.npz'))
+    pred_cam = dict(np.load(args.pred_cam_path))
+    pred_smpl = dict(np.load(args.pred_smpl_path))
 
     pred_rotmat = torch.tensor(pred_smpl['pred_rotmat'])    # T, 24, 3, 3
     pred_shape = torch.tensor(pred_smpl['pred_shape'])      # T, 10
@@ -187,7 +176,7 @@ for k, v in accumulator.items():
 results = {}
 for root in emdb:
     # Annotation
-    annfile = f'{root}/{root.split("/")[-2]}_{root.split("/")[-1]}_data.pkl'
+    annfile = root
     ann = pkl.load(open(annfile, 'rb'))
 
     ext = ann['camera']['extrinsics']
@@ -197,7 +186,7 @@ for root in emdb:
 
     # PRED
     seq = root.split('/')[-1]
-    pred_cam = dict(np.load(f'{input_dir}/camera/{seq}.npz'))
+    pred_cam = dict(np.load(args.pred_cam_path))
 
     pred_camt = torch.tensor(pred_cam['pred_cam_T'])
     pred_camr = torch.tensor(pred_cam['pred_cam_R'])
