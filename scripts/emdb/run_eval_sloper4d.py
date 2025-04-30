@@ -31,6 +31,7 @@ parser.add_argument('--pred_smpl_path', type=str, default='/home/junyi42/human_i
 parser.add_argument('--gt_pkl_path', type=str, default='/home/junyi42/human_in_world/demo_data/sloper4d/seq008_running_001/seq008_running_001_labels.pkl')
 
 parser.add_argument('--visualize', action='store_true', help='Visualize trajectories')
+parser.add_argument('--ours', action='store_true', help='Use our method')
 parser.add_argument('--grid_size', type=int, default=5, help='Grid size for trajectory visualization')
 args = parser.parse_args()
 input_dir = args.input_dir
@@ -148,13 +149,22 @@ pred = smpls['neutral'](body_pose=pred_rotmat[:,1:],
 pred_vert = pred.vertices
 pred_j3d = pred.joints[:, :24]
 
+# subtract the root joint and add pred_transl
+# pred_j3d = pred_j3d - pred_j3d[:, [0]]
+# pred_j3d = pred_j3d + pred_trans[:,0]
+
 pred_camt = torch.tensor(pred_cam['pred_cam_T']) 
 pred_camr = torch.tensor(pred_cam['pred_cam_R'])
 
-pred_vert_w = torch.einsum('bij,bnj->bni', pred_camr, pred_vert) + pred_camt[:,None]
-pred_j3d_w = torch.einsum('bij,bnj->bni', pred_camr, pred_j3d) + pred_camt[:,None]
-pred_ori_w = torch.einsum('bij,bjk->bik', pred_camr, pred_rotmat[:,0])
-pred_vert_w, pred_j3d_w = traj_filter(pred_vert_w, pred_j3d_w)
+if not args.ours:
+    pred_vert_w = torch.einsum('bij,bnj->bni', pred_camr, pred_vert) + pred_camt[:,None]
+    pred_j3d_w = torch.einsum('bij,bnj->bni', pred_camr, pred_j3d) + pred_camt[:,None]
+    pred_ori_w = torch.einsum('bij,bjk->bik', pred_camr, pred_rotmat[:,0])
+    pred_vert_w, pred_j3d_w = traj_filter(pred_vert_w, pred_j3d_w)
+else:
+    pred_vert_w = pred_vert
+    pred_j3d_w = pred_j3d
+    pred_ori_w = pred_rotmat[:,0]
 
 # Make sure the predicted data matches GT size
 min_len = min(len(gt_j3d), len(pred_j3d_w))
@@ -199,6 +209,7 @@ accumulator['accel'].append(accel)
 # <======= Evaluation on the global motion
 chunk_length = 100
 w_mpjpe, wa_mpjpe = [], []
+rte_chunk = []
 for start in range(0, valid.sum() - chunk_length, chunk_length):
     end = start + chunk_length
     if start + 2 * chunk_length > valid.sum(): end = valid.sum() - 1
@@ -214,8 +225,19 @@ for start in range(0, valid.sum() - chunk_length, chunk_length):
     w_mpjpe.append(w_jpe)
     wa_mpjpe.append(wa_jpe)
 
+    rte_chunk.append(compute_rte(target_j3d[:,0], pred_j3d[:,0]))
+
+
+# print(f"w_mpjpe: {w_mpjpe}, len: {len(w_mpjpe)}")
+# print(f"wa_mpjpe: {wa_mpjpe}, len: {len(wa_mpjpe)}")
+for wm in w_mpjpe:
+    print(f"wm: {wm}, len: {len(wm)}")
+for wa in wa_mpjpe:
+    print(f"wa: {wa}, len: {len(wa)}")
+
 w_mpjpe = np.concatenate(w_mpjpe) * m2mm
 wa_mpjpe = np.concatenate(wa_mpjpe) * m2mm
+rte_chunk = np.concatenate(rte_chunk) * 1e2
 # =======>
 
 # <======= Evaluation on the entier global motion
@@ -235,6 +257,7 @@ human_traj[seq_name] = {'gt': gt_j3d[:,0], 'pred': pred_j3d_align[:, 0]}
 accumulator['wa_mpjpe'].append(wa_mpjpe)
 accumulator['w_mpjpe'].append(w_mpjpe)
 accumulator['rte'].append(rte_align_all)
+accumulator['rte_chunk'].append(rte_chunk)
 accumulator['erve'].append(erve)
     
 for k, v in accumulator.items():
