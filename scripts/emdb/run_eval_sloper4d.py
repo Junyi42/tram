@@ -20,12 +20,12 @@ from sloper4d_loader import SLOPER4D_Dataset
 
 parser = argparse.ArgumentParser()
 
-# parser.add_argument('--input_dir', type=str, default='results/sloper4d_seq007')
+# parser.add_argument('--output_dir', type=str, default='results/sloper4d_seq007')
 # parser.add_argument('--pred_cam_path', type=str, default='/home/junyi42/human_in_world/sloper4d_eval_script/tram/results/seq007_garden_001_imgs/camera.npy')
 # parser.add_argument('--pred_smpl_path', type=str, default='/home/junyi42/human_in_world/sloper4d_eval_script/tram/results/seq007_garden_001_imgs/hps/hps_track_0.npy')
 # parser.add_argument('--gt_pkl_path', type=str, default='/home/junyi42/human_in_world/demo_data/sloper4d/seq007_garden_001/seq007_garden_001_labels.pkl')
 
-parser.add_argument('--input_dir', type=str, default='results/sloper4d_seq008')
+parser.add_argument('--output_dir', type=str, default='results/sloper4d_seq008')
 parser.add_argument('--pred_cam_path', type=str, default='/home/junyi42/human_in_world/sloper4d_eval_script/tram/results/seq008_running_001_imgs/camera.npy')
 parser.add_argument('--pred_smpl_path', type=str, default='/home/junyi42/human_in_world/sloper4d_eval_script/tram/results/seq008_running_001_imgs/hps/hps_track_0.npy')
 parser.add_argument('--gt_pkl_path', type=str, default='/home/junyi42/human_in_world/demo_data/sloper4d/seq008_running_001/seq008_running_001_labels.pkl')
@@ -34,11 +34,11 @@ parser.add_argument('--visualize', action='store_true', help='Visualize trajecto
 parser.add_argument('--ours', action='store_true', help='Use our method')
 parser.add_argument('--grid_size', type=int, default=5, help='Grid size for trajectory visualization')
 args = parser.parse_args()
-input_dir = args.input_dir
-if args.ours: input_dir = input_dir + '_ours'
+output_dir = args.output_dir
+if args.ours: output_dir = output_dir + '_ours'
 
 # Create visualization directory
-vis_dir = os.path.join(input_dir, 'visualizations')
+vis_dir = os.path.join(output_dir, 'visualizations')
 os.makedirs(vis_dir, exist_ok=True)
 
 # Load Sloper4D dataset
@@ -331,7 +331,7 @@ for k, v in accumulator.items():
     print(k, accumulator[k])
 
 df = pd.DataFrame(list(accumulator.items()), columns=['Metric', 'Value'])
-df.to_excel(f"{args.input_dir}/evaluation.xlsx", index=False)
+df.to_excel(f"{args.output_dir}/evaluation.xlsx", index=False)
 
 # Visualize trajectories if requested
 if args.visualize:
