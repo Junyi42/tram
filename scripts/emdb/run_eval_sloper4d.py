@@ -35,6 +35,7 @@ parser.add_argument('--ours', action='store_true', help='Use our method')
 parser.add_argument('--grid_size', type=int, default=5, help='Grid size for trajectory visualization')
 args = parser.parse_args()
 input_dir = args.input_dir
+if args.ours: input_dir = input_dir + '_ours'
 
 # Create visualization directory
 vis_dir = os.path.join(input_dir, 'visualizations')
@@ -230,14 +231,27 @@ for start in range(0, valid.sum() - chunk_length, chunk_length):
 
 # print(f"w_mpjpe: {w_mpjpe}, len: {len(w_mpjpe)}")
 # print(f"wa_mpjpe: {wa_mpjpe}, len: {len(wa_mpjpe)}")
-for wm in w_mpjpe:
-    print(f"wm: {wm}, len: {len(wm)}")
-for wa in wa_mpjpe:
-    print(f"wa: {wa}, len: {len(wa)}")
 
 w_mpjpe = np.concatenate(w_mpjpe) * m2mm
 wa_mpjpe = np.concatenate(wa_mpjpe) * m2mm
+
+# plot w_mpjpe and wa_mpjpe and save as to figures
+plt.figure(figsize=(10, 5))
+plt.plot(w_mpjpe, label='w_mpjpe')
+plt.plot(wa_mpjpe, label='wa_mpjpe')
+plt.legend()
+plt.savefig(os.path.join(vis_dir, 'mpjpe.png'))
+plt.close()
+
 rte_chunk = np.concatenate(rte_chunk) * 1e2
+
+# plot rte_chunk and save as to figures
+plt.figure(figsize=(10, 5))
+plt.plot(rte_chunk, label='rte_chunk')
+plt.legend()
+plt.savefig(os.path.join(vis_dir, 'rte_chunk.png'))
+plt.close()
+
 # =======>
 
 # <======= Evaluation on the entier global motion
@@ -273,10 +287,16 @@ cam_t = np.einsum('bij, bj->bi', cam_r, -cam_pose[:, :3, 3])
 cam_q = matrix_to_quaternion(torch.from_numpy(cam_r)).numpy()
 
 # Get predicted camera trajectory
-pred_camt = torch.tensor(pred_cam['pred_cam_T'])
-pred_camr = torch.tensor(pred_cam['pred_cam_R'])
-pred_camq = matrix_to_quaternion(pred_camr)
-pred_traj = torch.concat([pred_camt, pred_camq], dim=-1).numpy()
+if args.ours:
+    camera_matrix = pred_smpl['pred_cams'] # T, 4, 4
+    pred_traj_t = torch.from_numpy(camera_matrix[:, :3, 3])
+    pred_traj_q = matrix_to_quaternion(torch.from_numpy(camera_matrix[:, :3, :3]))
+    pred_traj = torch.concat([pred_traj_t, pred_traj_q], dim=-1).numpy()
+else:
+    pred_camt = torch.tensor(pred_cam['pred_cam_T'])
+    pred_camr = torch.tensor(pred_cam['pred_cam_R'])
+    pred_camq = matrix_to_quaternion(pred_camr)
+    pred_traj = torch.concat([pred_camt, pred_camq], dim=-1).numpy()
 
 # Cut to the same length if needed
 min_len = min(len(cam_t), len(pred_traj))
